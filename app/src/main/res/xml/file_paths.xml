@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 物理路径相当于Context.getFilesDir() + /path/ -->
+    <files-path
+        name="files"
+        path="/Download" />
+    <!-- 物理路径相当于Context.getCacheDir() + /path/ -->
+    <cache-path
+        name="cache"
+        path="/Download" />
+    <!-- 物理路径相当于Environment.getExternalStorageDirectory() + /path/ -->
+    <external-path
+        name="external"
+        path="/Download" />
+    <!-- 物理路径相当于Context.getExternalFilesDir(String) + /path/ -->
+    <external-files-path
+        name="externalfiles"
+        path="/Download" />
+    <!-- 物理路径相当于Context.getExternalCacheDir() + /path/ 此标签需要 support 25.0.0以上才可以使用 -->
+    <external-cache-path
+        name="externalcache"
+        path="/Download" />
+    <!--</paths>-->
+</resources>
