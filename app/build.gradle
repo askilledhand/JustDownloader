@@ -9,7 +9,7 @@ android {
     lintOptions { abortOnError false }
     defaultConfig {
         // applicationId "com.chi.justdownloader"
-        minSdkVersion 24
+        minSdkVersion 14
         targetSdkVersion 26
         versionCode 1
         versionName "1.0"
