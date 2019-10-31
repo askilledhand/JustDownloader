@@ -19,6 +19,10 @@ public interface IDownloader {
      */
      void pause();
 
+    /**
+     * 开始所有下载线程
+     */
+    void start();
 
     /**
      * 恢复

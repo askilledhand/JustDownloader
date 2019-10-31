@@ -29,27 +29,31 @@ public class DownloadTask implements IDownloader{
     //文件下载的url
     public String url;
     //文件的名称
-    private String fileName;
+    public String fileName;
     //文件的路径
-    private String filePath;
+    public String filePath;
     //文件的大小
-    private int mContentLength;
+    public int mContentLength;
     //下载文件的线程的个数
-    private int mThreadSize;
+    public int mThreadSize;
     //线程下载成功的个数,变量加个volatile，多线程保证变量可见性
-    private volatile int mSuccessNumber;
+    public volatile int mSuccessNumber;
     //总进度=每个线程的进度的和
-    private int mCurrentLength;
+    public int mCurrentLength;
     //总进度=每个线程的进度的和
-    private int mTotalLength;
+    public int mTotalLength;
     //最近一次进度，可用来对比当前进度，变化时才回调更新
     public int mLastProgress = 0;
     //是否显示进度
-    private boolean showProgress = false;
+    public boolean showProgress = false;
     //周期计算下载速度开始时间
-    private long start;
+    public long start;
+    //周期计算下载速度开始时间
+    public long startTime;
     //周期计算下载速度期间下载的大小
-    private long totalRead = 0;
+    public long totalRead = 0;
+    //下载速度
+    public double mDownloadSpeed = 0;
     private Timer timer;
     private final double NANOS_PER_SECOND = 1000000000.0;//1秒=10亿nanoseconds
     private final double BYTES_PER_MIB = 1024 * 1024;//1M=1024*1024byte
@@ -176,7 +180,7 @@ public class DownloadTask implements IDownloader{
             public void run() {
                 RemoteFile remoteFile = RemoteFileUtil.getRemoteFileLength(url);
                 if (remoteFile.getLength() < 1) { // 获取文件长度失败
-                    mDownloadCallback.onFailure();
+                    mDownloadCallback.onFailure(url);
                     return;
                 } else {
                     mContentLength = remoteFile.getLength();
@@ -246,9 +250,14 @@ public class DownloadTask implements IDownloader{
                         public void onFinish(int total) {
                             mTotalLength += total;
                             if (mTotalLength == mContentLength) {
-                                String totalPath = filePath + (fileName == null ? RemoteFileUtil
+                                final String totalPath = filePath + (fileName == null ? RemoteFileUtil
                                         .getRemoteFileName(url) : fileName);
-                                mDownloadCallback.onSuccess(totalPath);
+                                ((Activity)context).runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        mDownloadCallback.onSuccess(url, totalPath);
+                                    }
+                                });
                                 cancelTimer();
                             }
                         }
@@ -260,11 +269,23 @@ public class DownloadTask implements IDownloader{
 
                         @Override
                         public void onPause() {
+                            ((Activity)context).runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    mDownloadCallback.onPause(url);
+                                }
+                            });
                             cancelTimer();
                         }
 
                         @Override
                         public void onFail() {
+                            ((Activity)context).runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    mDownloadCallback.onFailure(url);
+                                }
+                            });
                             cancelTimer();
                         }
                     });
@@ -275,20 +296,23 @@ public class DownloadTask implements IDownloader{
 
             // 获取下载速度
             private void getDownloadSpeed() {
-                start = System.nanoTime();//开始时间
+                startTime = System.nanoTime();//开始时间
                 timer = new Timer();
                 timer.schedule(new TimerTask() {
                     @Override
                     public void run() {
                         long tmpTotalRead = mCurrentLength - totalRead;//期间下载的大小
                         final double speed = NANOS_PER_SECOND / BYTES_PER_MIB * tmpTotalRead /
-                                (System.nanoTime() - start + 1);
+                                (System.nanoTime() - startTime + 1);
+                        mDownloadSpeed = speed;
                         ((Activity)context).runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                mDownloadCallback.onSpeed(speed);
+                                mDownloadCallback.onSpeed(url, speed);
                             }
                         });
+                        totalRead = mContentLength;
+                        startTime = System.nanoTime();
                     }
                 },1000,1000);//每隔一秒使用handler发送一下消息,也就是每隔一秒执行一次,一直重复执行
 
@@ -330,7 +354,17 @@ public class DownloadTask implements IDownloader{
         for (DownloadThread thread : mDownloadThreads) {
             thread.interrupt();
         }
+        mDownloadThreads.clear();
+        mCurrentLength = 0;
         cancelTimer();
+    }
+
+    @Override
+    public void start() {
+        //for (DownloadThread thread : mDownloadThreads) {
+        //    JustDownloader.getInstance().executorService().execute(thread);
+        //}
+        //cancelTimer();
     }
 
     @Override

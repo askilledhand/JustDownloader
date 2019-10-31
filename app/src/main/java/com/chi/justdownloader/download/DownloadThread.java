@@ -61,7 +61,7 @@ public class DownloadThread extends Thread {
     private void setPause(boolean pause) {
         isPause = pause;
         downloadState = DownloadState.PAUSE;
-        Log.d(TAG, "setPause: " + url);
+        threadDownloadListener.onPause();
     }
 
     public DownloadState getDownloadState() {
@@ -173,11 +173,9 @@ public class DownloadThread extends Thread {
     }
 
     private void checkDBRecord() {
-        Log.d(TAG, "checkDBRecord tid: " + Process.myTid());
         DownloadInfo info = mDatabaseHelper.getDownloadInfo(url, filePath, startIndex,Process.myTid());
         File file = new File(filePath);
         if (info == null) {
-            Log.i(TAG, Process.myTid() + "---check db record null");
             if (file.exists()) {
                 file.delete();
             }
@@ -187,7 +185,6 @@ public class DownloadThread extends Thread {
             /* 由于下载过程断电，允许实际文件大小与数据库存储有一个buffer的误差 */
                 //|| file.length() - info.getReceive() < 0
                 //|| file.length() - info.getReceive() > MALLOC_COPY_BUFFER)
-            Log.i(TAG, Process.myTid() + "---check db record error");
             if (file.exists()) {
                 file.delete();
             }
@@ -195,14 +192,12 @@ public class DownloadThread extends Thread {
             mDatabaseHelper.updateFileLength(url, filePath, fileLength, startIndex);
             mDatabaseHelper.updateReceive(url, filePath, 0, startIndex);
         } else {
-            Log.i(TAG, Process.myTid() + "---check db record success");
             receive = info.getReceive();
             if (receive == fileLength) {
                 threadDownloadListener.onProgress(0);
                 threadDownloadListener.onFinish(fileLength);
                 downloadState = DownloadState.FINISH;
             }
-            Log.d(TAG, "checkDBRecord receive: " + receive);
         }
     }
 
@@ -212,7 +207,6 @@ public class DownloadThread extends Thread {
         if (downloadState == DownloadState.FINISH) {
             return;
         }
-        Log.d(TAG, "run: ");
         InputStream inputStream = null;
         RandomAccessFile randomAccessFile = null;
         long total = 0;//记录下载的总量
