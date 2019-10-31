@@ -49,7 +49,34 @@ public class DownloadAdapter extends RecyclerView.Adapter<DownloadAdapter.MyHold
     }
 
     @Override
+    public void onBindViewHolder(MyHolder holder, int position, List<Object> payloads) {
+        Log.d(TAG, "onBindViewHolder: -----------------------1" + payloads.size() + "   /    " + payloads.get(0));
+        if (payloads.isEmpty()){
+            super.onBindViewHolder(holder, position, payloads);
+            return;
+        }
+        DownloadTask downloadTask = list.get(position);
+        //循环得到payloads里面的参数
+        for (Object payload:payloads) {
+            switch (String.valueOf(payload)){
+                case "progress":
+                    holder.progressBar.setProgress(downloadTask.mLastProgress);
+                    break;
+                case "speed":
+                    //holder.speedView.setText(downloadTask.mDownloadSpeed);
+                    break;
+                case "state":
+                    //holder.stateView.setText(bean.getAge()+"");
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
+
+    @Override
     public void onBindViewHolder(@NonNull final MyHolder holder, final int position) {
+        Log.d(TAG, "onBindViewHolder: -----------------------2");
         Log.d(TAG, "onBindViewHolder: " + position);
         DownloadTask downloadTask = list.get(position);
         Log.d(TAG, "onBindViewHolder: " + downloadTask);

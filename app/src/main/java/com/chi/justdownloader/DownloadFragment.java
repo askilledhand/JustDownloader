@@ -22,7 +22,9 @@ import com.chi.justdownloader.download.JustDownloader;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by Administrator on 2019/9/6.
@@ -38,13 +40,17 @@ public class DownloadFragment extends Fragment implements DownloadCallback, Down
     private List<DownloadItem> list = new ArrayList<>();
     private List<DownloadTask> taskList = new ArrayList<>();
     private HashMap<String, DownloadItem> urlTaskList= new HashMap<>();
-    private List<String> allUrl = new ArrayList<>();
+    //private List<String> allUrl = new ArrayList<>();
+    private Map<String, String> allUrl = new HashMap<>();
     //正在执行
-    private List<String> downloadUrl = new ArrayList<>();
+    //private List<String> downloadUrl = new ArrayList<>();
+    private Map<String, String> downloadUrl = new HashMap<>();
     //暂停执行
-    private List<String> pauseUrl = new ArrayList<>();
+    //private List<String> pauseUrl = new ArrayList<>();
+    private Map<String, String> pauseUrl = new HashMap<>();
     //等待执行
-    private List<String> waitUrl = new ArrayList<>();
+    //private List<String> waitUrl = new ArrayList<>();
+    private Map<String, String> waitUrl = new HashMap<>();
 
     @Nullable
     @Override
@@ -64,14 +70,14 @@ public class DownloadFragment extends Fragment implements DownloadCallback, Down
     }
 
     public void addTask(String url, String fileName) {
-        if (allUrl.contains(url)) {
+        if (allUrl.containsKey(url)) {
             Toast.makeText(getActivity(), "Task is exist!", Toast.LENGTH_SHORT).show();
             return;
         } else {
-            allUrl.add(url);
+            allUrl.put(url, fileName);
         }
         if (downloadUrl.size() > MOSTDOWNLOAD) {
-            waitUrl.add(url);
+            waitUrl.put(url, fileName);
         } else {
             startDownload(url, fileName);
         }
@@ -80,7 +86,7 @@ public class DownloadFragment extends Fragment implements DownloadCallback, Down
     private void startDownload(String url, String fileName) {
         Log.d(TAG, "startDownload: " + url);
         Log.d(TAG, "startDownload: " + JustDownloader.getInstance().getDownloadTaskLinkedHashMap().size());
-        downloadUrl.add(url);
+        downloadUrl.put(url, fileName);
         JustDownloader.with(getActivity())
                 .withUrl(url)
                 //.allowBackgroundDownload(true)
@@ -101,23 +107,28 @@ public class DownloadFragment extends Fragment implements DownloadCallback, Down
     }
 
     @Override
-    public void onSuccess(String filePath) {
+    public void onSuccess(String url, String filePath) {
+        allUrl.remove(url);
+    }
+
+    @Override
+    public void onPause(String url) {
 
     }
 
     @Override
-    public void onFailure() {
+    public void onFailure(String url) {
 
     }
 
     @Override
     public void onProgress(String url, int progress) {
         DownloadTask downloadTask = JustDownloader.getInstance().getDownloadTaskLinkedHashMap().get(url);
-        downloadAdapter.notifyItemChanged(allUrl.indexOf(url), "notify");
+        downloadAdapter.notifyItemChanged(getUrlPosition(allUrl, url), "progress");
     }
 
     @Override
-    public void onSpeed(double speed) {
+    public void onSpeed(String url, double speed) {
 
     }
 
@@ -137,5 +148,20 @@ public class DownloadFragment extends Fragment implements DownloadCallback, Down
         //if (downloadTask != null) {
         //    downloadTask.pause();
         //}
+    }
+
+    private int getUrlPosition(Map<String, String> map, String url) {
+        int position = 0;
+        Iterator iter = map.entrySet().iterator();
+        while (iter.hasNext()) {
+            Map.Entry entry = (Map.Entry) iter.next();
+            String key = (String) entry.getKey();
+            // Object val = entry.getValue();
+            if (key.equals(url)) {
+                return position;
+            }
+            position ++;
+        }
+        return position;
     }
 }

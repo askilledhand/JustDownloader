@@ -46,6 +46,7 @@ public class MainActivity extends Activity implements DownloadCallback {
     String url_1 = "http://www.sxotu.com/u/20180509/09154140.gif";
     String url_2 = "http://pic1.win4000.com/wallpaper/2017-10-11/59dde2bca944f.jpg";
     String url_3 = "http://gdown.baidu.com/data/wisegame/d2fbbc8e64990454/wangyiyunyinle_87.apk";
+    String url_4 = "https://desktop.githubusercontent.com/releases/2.2.2-5a1cfa2d/GitHubDesktopSetup.exe";
 
     private Button start;
     private Button pause;
@@ -75,7 +76,7 @@ public class MainActivity extends Activity implements DownloadCallback {
         start.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                downloadFragment.addTask(url_3, "music.apk");
+                downloadFragment.addTask(url_4, "GitHubDesktopSetup.exe");
                 //startDownload();
             }
         });
@@ -138,7 +139,7 @@ public class MainActivity extends Activity implements DownloadCallback {
     @Override
     public void onProgress(String url, int progress) {
         Log.d(TAG, "onProgress1: " + progress);
-        int i = JustDownloader.getInstance().getDownloadTaskLinkedHashMap().get(url_3).mLastProgress;
+        int i = JustDownloader.getInstance().getDownloadTaskLinkedHashMap().get(url_4).mLastProgress;
         Log.d(TAG, "onProgress2: " + i);
         progressBar.setProgress(progress);
         progressTV.setText(progress + "%");
