@@ -117,7 +117,7 @@ public class MainActivity extends Activity implements DownloadCallback {
     }
 
     @Override
-    public void onSuccess(String filePath) {
+    public void onSuccess(String url, String filePath) {
         Log.d(TAG, "onSuccess: " + filePath);
         runOnUiThread(new Runnable() {
             @Override
@@ -132,8 +132,13 @@ public class MainActivity extends Activity implements DownloadCallback {
     }
 
     @Override
-    public void onFailure() {
+    public void onFailure(String url) {
         Log.d(TAG, "onFailure: ");
+    }
+
+    @Override
+    public void onPause(String url) {
+        
     }
 
     @Override
@@ -153,7 +158,7 @@ public class MainActivity extends Activity implements DownloadCallback {
     }
 
     @Override
-    public void onSpeed(double speed) {
+    public void onSpeed(String url, double speed) {
         Log.d(TAG, "onSpeed: " + speed);
     }
 
