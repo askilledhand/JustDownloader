@@ -43,5 +43,5 @@ public interface DownloadCallback {
      * @param url 下载链接
      * @param speed 下载速度
      */
-    void onSpeed(String url, double speed);
+    void onSpeed(String url, String speed);
 }

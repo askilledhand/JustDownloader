@@ -138,7 +138,7 @@ public class MainActivity extends Activity implements DownloadCallback {
 
     @Override
     public void onPause(String url) {
-        
+
     }
 
     @Override
@@ -158,7 +158,7 @@ public class MainActivity extends Activity implements DownloadCallback {
     }
 
     @Override
-    public void onSpeed(String url, double speed) {
+    public void onSpeed(String url, String speed) {
         Log.d(TAG, "onSpeed: " + speed);
     }
 

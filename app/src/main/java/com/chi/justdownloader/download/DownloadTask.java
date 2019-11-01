@@ -23,7 +23,7 @@ import io.reactivex.internal.operators.parallel.ParallelRunOn;
  * @author jxsong
  */
 
-public class DownloadTask implements IDownloader{
+public class DownloadTask implements IDownloader {
     private static final String TAG = "DownloadTask";
     private Context context;
     //文件下载的url
@@ -53,10 +53,16 @@ public class DownloadTask implements IDownloader{
     //周期计算下载速度期间下载的大小
     public long totalRead = 0;
     //下载速度
-    public double mDownloadSpeed = 0;
+    public String mDownloadSpeed;
     private Timer timer;
     private final double NANOS_PER_SECOND = 1000000000.0;//1秒=10亿nanoseconds
     private final double BYTES_PER_MIB = 1024 * 1024;//1M=1024*1024byte
+    //定义GB的计算常量
+    private static final int GB = 1024 * 1024 * 1024;
+    //定义MB的计算常量
+    private static final int MB = 1024 * 1024;
+    //定义KB的计算常量
+    private static final int KB = 1024;
     public volatile DownloadState downloadState = DownloadState.PAUSE;//下载状态,默认为暂停
     private Map<String, String> requestPropertyMap = new HashMap<>();
     private List<DownloadThread> mDownloadThreads = new ArrayList<>();
@@ -67,13 +73,13 @@ public class DownloadTask implements IDownloader{
     }
 
     /**
-     * @param context        上下文对象
-     * @param url            下载的地址
-     * @param name           文件名
-     * @param path           文件保存路径
-     * @param threadSize     该文件由几个线程下载
-     * @param contentLength  文件长度
-     * @param callBack       回调接口
+     * @param context       上下文对象
+     * @param url           下载的地址
+     * @param name          文件名
+     * @param path          文件保存路径
+     * @param threadSize    该文件由几个线程下载
+     * @param contentLength 文件长度
+     * @param callBack      回调接口
      */
     public DownloadTask(Context context, String url, String name, String path, int threadSize,
                         int contentLength, DownloadCallback callBack) {
@@ -88,6 +94,7 @@ public class DownloadTask implements IDownloader{
 
     /**
      * 设置文件下载路径
+     *
      * @param url 文件下载路径
      * @return 下载任务
      */
@@ -100,7 +107,8 @@ public class DownloadTask implements IDownloader{
 
     /**
      * 添加额外的请求头
-     * @param key 请求头-键
+     *
+     * @param key   请求头-键
      * @param value 请求头-值
      * @return DownloadTask
      */
@@ -111,6 +119,7 @@ public class DownloadTask implements IDownloader{
 
     /**
      * 添加额外的请求头
+     *
      * @param map 请求头map
      * @return DownloadTask
      */
@@ -121,6 +130,7 @@ public class DownloadTask implements IDownloader{
 
     /**
      * 设置文件下载的目录
+     *
      * @param filePath 文件下载的目录
      * @return DownloadTask
      */
@@ -134,6 +144,7 @@ public class DownloadTask implements IDownloader{
 
     /**
      * 设置文件名，非必须，未设置则用服务器文件名
+     *
      * @param fileName 文件名
      * @return DownloadTask
      */
@@ -144,6 +155,7 @@ public class DownloadTask implements IDownloader{
 
     /**
      * 设置下载线程数
+     *
      * @param mThreadSize 线程数 最大为5
      * @return DownloadTask
      */
@@ -166,6 +178,7 @@ public class DownloadTask implements IDownloader{
 
     /**
      * 获取下载状态
+     *
      * @return 当前下载状态
      */
     public DownloadState getDownloadState() {
@@ -198,7 +211,8 @@ public class DownloadTask implements IDownloader{
                     int start = i * perThreadSize;
                     //结束下载的位置
                     int end = start + perThreadSize - 1;
-                    DownloadInfo info = JustDownloader.getDatabaseHelper(context).getDownloadInfo(url, filePath + (fileName == null ? RemoteFileUtil
+                    DownloadInfo info = JustDownloader.getDatabaseHelper(context).getDownloadInfo
+                            (url, filePath + (fileName == null ? RemoteFileUtil
                             .getRemoteFileName(url) : fileName), start, Process.myTid());
                     if (info != null) {
                         // 获取每个线程已经下载的大小
@@ -212,11 +226,13 @@ public class DownloadTask implements IDownloader{
                         showProgress = true;
                         getDownloadSpeed();
                     }
-                    DownloadThread downloadThread = new DownloadThread(context, url, fileName, filePath, start, end,
+                    DownloadThread downloadThread = new DownloadThread(context, url, fileName,
+                            filePath, start, end,
                             requestPropertyMap, new IThreadDownloader() {
 
                         @Override
                         public void onProgress(int progress) {
+                            Log.d(TAG, "onProgress--------------------> " + progress);
                             mCurrentLength += progress;
                             long mcl = mCurrentLength;
                             final int mCurrentProgress = (int) (mcl * 100 / mContentLength);
@@ -224,7 +240,7 @@ public class DownloadTask implements IDownloader{
                                 // 进度值发生变化
                                 if (mCurrentProgress != mLastProgress) {
                                     mLastProgress = mCurrentProgress;
-                                    ((Activity)context).runOnUiThread(new Runnable() {
+                                    ((Activity) context).runOnUiThread(new Runnable() {
                                         @Override
                                         public void run() {
                                             mDownloadCallback.onProgress(url, mLastProgress);
@@ -250,9 +266,10 @@ public class DownloadTask implements IDownloader{
                         public void onFinish(int total) {
                             mTotalLength += total;
                             if (mTotalLength == mContentLength) {
-                                final String totalPath = filePath + (fileName == null ? RemoteFileUtil
+                                final String totalPath = filePath + (fileName == null ?
+                                        RemoteFileUtil
                                         .getRemoteFileName(url) : fileName);
-                                ((Activity)context).runOnUiThread(new Runnable() {
+                                ((Activity) context).runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
                                         mDownloadCallback.onSuccess(url, totalPath);
@@ -269,7 +286,7 @@ public class DownloadTask implements IDownloader{
 
                         @Override
                         public void onPause() {
-                            ((Activity)context).runOnUiThread(new Runnable() {
+                            ((Activity) context).runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
                                     mDownloadCallback.onPause(url);
@@ -280,7 +297,7 @@ public class DownloadTask implements IDownloader{
 
                         @Override
                         public void onFail() {
-                            ((Activity)context).runOnUiThread(new Runnable() {
+                            ((Activity) context).runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
                                     mDownloadCallback.onFailure(url);
@@ -302,19 +319,20 @@ public class DownloadTask implements IDownloader{
                     @Override
                     public void run() {
                         long tmpTotalRead = mCurrentLength - totalRead;//期间下载的大小
-                        final double speed = NANOS_PER_SECOND / BYTES_PER_MIB * tmpTotalRead /
+                        final double speed = NANOS_PER_SECOND * tmpTotalRead /
                                 (System.nanoTime() - startTime + 1);
-                        mDownloadSpeed = speed;
-                        ((Activity)context).runOnUiThread(new Runnable() {
+                        final String speeds = bytes2b(speed);
+                        mDownloadSpeed = speeds;
+                        ((Activity) context).runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                mDownloadCallback.onSpeed(url, speed);
+                                mDownloadCallback.onSpeed(url, speeds);
                             }
                         });
-                        totalRead = mContentLength;
+                        totalRead = mCurrentLength;
                         startTime = System.nanoTime();
                     }
-                },1000,1000);//每隔一秒使用handler发送一下消息,也就是每隔一秒执行一次,一直重复执行
+                }, 1000, 1000);//每隔一秒使用handler发送一下消息,也就是每隔一秒执行一次,一直重复执行
 
             }
         });
@@ -322,6 +340,7 @@ public class DownloadTask implements IDownloader{
 
     /**
      * double转String,保留小数点后两位
+     *
      * @param num
      * @return
      */
@@ -340,6 +359,24 @@ public class DownloadTask implements IDownloader{
             return Double.parseDouble(number);
         } catch (Exception e) {
             return defaultValue;
+        }
+    }
+
+    /**
+     * @param bytes 大小
+     * @return 根据大小返回对应单位的值
+     */
+    public static String bytes2b(double bytes) {
+        //格式化小数
+        DecimalFormat format = new DecimalFormat("###.0");
+        if (bytes / GB >= 1) {
+            return format.format(bytes / GB) + "GB";
+        } else if (bytes / MB >= 1) {
+            return format.format(bytes / MB) + "MB";
+        } else if (bytes / KB >= 1) {
+            return format.format(bytes / KB) + "KB";
+        } else {
+            return bytes + "B";
         }
     }
 
