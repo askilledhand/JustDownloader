@@ -128,7 +128,7 @@ public class DownloadFragment extends Fragment implements DownloadCallback, Down
     }
 
     @Override
-    public void onSpeed(String url, double speed) {
+    public void onSpeed(String url, String speed) {
 
     }
 
