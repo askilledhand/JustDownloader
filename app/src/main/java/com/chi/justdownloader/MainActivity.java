@@ -76,7 +76,8 @@ public class MainActivity extends Activity implements DownloadCallback {
         start.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                downloadFragment.addTask(url_4, "GitHubDesktopSetup.exe");
+                //downloadFragment.addTask(url_4, "GitHubDesktopSetup.exe");
+                downloadFragment.addTask("http://dldir1.qq.com/weixin/android/weixin707android1520.apk", "weixin.apk");
                 //startDownload();
             }
         });
@@ -84,7 +85,8 @@ public class MainActivity extends Activity implements DownloadCallback {
         pause.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                downloadFragment.addTask(url_0, "test.jpg");
+                //downloadFragment.addTask(url_0, "test.jpg");
+                downloadFragment.pause();
                 //pauseDonload();
             }
         });

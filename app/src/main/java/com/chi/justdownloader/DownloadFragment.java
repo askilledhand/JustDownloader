@@ -84,6 +84,7 @@ public class DownloadFragment extends Fragment implements DownloadCallback, Down
     }
 
     private void startDownload(String url, String fileName) {
+        taskList.clear();
         Log.d(TAG, "startDownload: " + url);
         Log.d(TAG, "startDownload: " + JustDownloader.getInstance().getDownloadTaskLinkedHashMap().size());
         downloadUrl.put(url, fileName);
@@ -106,6 +107,10 @@ public class DownloadFragment extends Fragment implements DownloadCallback, Down
 
     }
 
+    public void pause() {
+        taskList.get(0).pause();
+    }
+
     @Override
     public void onSuccess(String url, String filePath) {
         allUrl.remove(url);
@@ -123,6 +128,7 @@ public class DownloadFragment extends Fragment implements DownloadCallback, Down
 
     @Override
     public void onProgress(String url, int progress) {
+        Log.d(TAG, "onProgress: " + progress);
         DownloadTask downloadTask = JustDownloader.getInstance().getDownloadTaskLinkedHashMap().get(url);
         downloadAdapter.notifyItemChanged(getUrlPosition(allUrl, url), "progress");
     }

@@ -188,6 +188,7 @@ public class DownloadTask implements IDownloader {
 
     @Override
     public void download() {
+        mCurrentLength = 0;
         JustDownloader.getInstance().executorService().execute(new Runnable() {
             @Override
             public void run() {
@@ -219,6 +220,20 @@ public class DownloadTask implements IDownloader {
                         int received = info.getReceive();
                         mCurrentLength += received;
                         totalRead = mCurrentLength;
+                        // 已下载完成
+                        if (mContentLength == totalRead) {
+                            mLastProgress = 100;
+                            final String totalPath = filePath + (fileName == null ?
+                                    RemoteFileUtil
+                                            .getRemoteFileName(url) : fileName);
+                            ((Activity) context).runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    mDownloadCallback.onProgress(url, mLastProgress);
+                                    mDownloadCallback.onSuccess(url, totalPath);
+                                }
+                            });
+                        }
                     }
                     if (i == mThreadSize - 1) {
                         end = mContentLength - 1;
@@ -232,7 +247,6 @@ public class DownloadTask implements IDownloader {
 
                         @Override
                         public void onProgress(int progress) {
-                            Log.d(TAG, "onProgress--------------------> " + progress);
                             mCurrentLength += progress;
                             long mcl = mCurrentLength;
                             final int mCurrentProgress = (int) (mcl * 100 / mContentLength);
@@ -370,13 +384,13 @@ public class DownloadTask implements IDownloader {
         //格式化小数
         DecimalFormat format = new DecimalFormat("###.0");
         if (bytes / GB >= 1) {
-            return format.format(bytes / GB) + "GB";
+            return format.format(bytes / GB) + "GB/s";
         } else if (bytes / MB >= 1) {
-            return format.format(bytes / MB) + "MB";
+            return format.format(bytes / MB) + "MB/s";
         } else if (bytes / KB >= 1) {
-            return format.format(bytes / KB) + "KB";
+            return format.format(bytes / KB) + "KB/s";
         } else {
-            return bytes + "B";
+            return bytes + "B/s";
         }
     }
 
@@ -392,7 +406,6 @@ public class DownloadTask implements IDownloader {
             thread.interrupt();
         }
         mDownloadThreads.clear();
-        mCurrentLength = 0;
         cancelTimer();
     }
 

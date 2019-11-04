@@ -50,7 +50,6 @@ public class DownloadAdapter extends RecyclerView.Adapter<DownloadAdapter.MyHold
 
     @Override
     public void onBindViewHolder(MyHolder holder, int position, List<Object> payloads) {
-        Log.d(TAG, "onBindViewHolder: -----------------------1" + payloads.size() + "   /    " + payloads.get(0));
         if (payloads.isEmpty()){
             super.onBindViewHolder(holder, position, payloads);
             return;
