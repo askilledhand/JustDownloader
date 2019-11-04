@@ -54,6 +54,8 @@ public class DownloadTask implements IDownloader {
     public long totalRead = 0;
     //下载速度
     public String mDownloadSpeed;
+    //下载状态
+    public boolean mDownloadStatus;
     private Timer timer;
     private final double NANOS_PER_SECOND = 1000000000.0;//1秒=10亿nanoseconds
     private final double BYTES_PER_MIB = 1024 * 1024;//1M=1024*1024byte
@@ -188,7 +190,8 @@ public class DownloadTask implements IDownloader {
 
     @Override
     public void download() {
-        mCurrentLength = 0;
+        mCurrentLength = 0; // 开始下载,长度清零
+        mDownloadStatus = true; // 开始下载
         JustDownloader.getInstance().executorService().execute(new Runnable() {
             @Override
             public void run() {
@@ -278,6 +281,7 @@ public class DownloadTask implements IDownloader {
 
                         @Override
                         public void onFinish(int total) {
+                            mDownloadStatus = false;
                             mTotalLength += total;
                             if (mTotalLength == mContentLength) {
                                 final String totalPath = filePath + (fileName == null ?
@@ -303,10 +307,14 @@ public class DownloadTask implements IDownloader {
                             ((Activity) context).runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
-                                    mDownloadCallback.onPause(url);
+                                    // 由于存在多线程的情况，根据下载状态只回调一次
+                                    if (mDownloadStatus) {
+                                        mDownloadCallback.onPause(url);
+                                    }
                                 }
                             });
                             cancelTimer();
+                            mDownloadStatus = false;
                         }
 
                         @Override
@@ -314,10 +322,13 @@ public class DownloadTask implements IDownloader {
                             ((Activity) context).runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
-                                    mDownloadCallback.onFailure(url);
+                                    if (mDownloadStatus) {
+                                        mDownloadCallback.onFailure(url);
+                                    }
                                 }
                             });
                             cancelTimer();
+                            mDownloadStatus = false;
                         }
                     });
                     JustDownloader.getInstance().executorService().execute(downloadThread);
