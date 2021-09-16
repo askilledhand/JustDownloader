@@ -1,4 +1,4 @@
-// 示例
+// 示例<br>
 allprojects {<br>
 	repositories {<br>
 	...<br>
